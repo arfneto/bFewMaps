@@ -5,6 +5,9 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
+# root html
+MapTest-1.html
+
 # Runtime data
 pids
 *.pid
