@@ -5,10 +5,22 @@
 //
 
 var map;
+var markers = [];	// to hold the markers
 
 function initMap()
 {
-	console.log( "ïnitMap: loading map");
+
+	var locations = [
+		{title: 'Islas', location: 			{ lat: -23.552589, lng: -46.574953 }},
+		{title: 'Sergio', location: 		{ lat: -23.492421, lng: -46.629011 }},
+		{title: 'Mix Leste', location: 		{ lat: -23.541898, lng: -46.547551 }},
+		{title: 'Cotia', location: 			{ lat: -23.602668, lng: -46.919469 }},
+		{title: 'Aguas Claras', location: 	{ lat: -23.421393, lng: -46.621301 }},
+		{title: 'Horto', location: 			{ lat: -23.459292, lng: -46.633217 }},
+		{title: 'James', location: 			{ lat: -23.551656, lng: -46.619614 }},
+		{title: 'Carlos', location: 		{ lat: -23.527011, lng: -46.945907 }}
+	];
+
 	map = new google.maps.Map(
 		document.getElementById('map'),
 		{ 
@@ -17,69 +29,61 @@ function initMap()
 			    lat: -23.552589,
 				lng: -46.574953
 			},
-			zoom: 13
+			zoom: 16
 		}
 	);
 
-	var ShoppingCenter = { lat: -23.560471,lng: -46.561292	};
-	var hm2 = {	 lat: -23.568374,	lng: -46.536215	};
+	var bigInfoWindow = new google.maps.InfoWindow();
+	var bounds = new google.maps.LatLngBounds();
 
-	var marker1 = new 
-		google.maps.Marker(
-		{
-   		position: ShoppingCenter,
-   		map:      map,
-   		title:    'Shopping'
-		}
-		);	
-		var marker2 = new 
-		google.maps.Marker(
-		{
-   		position: hm2,
-   		map:      map,
-   		title:    'Henrique Morize 2'
-		}
+	// now we loop thru the location arrary and fill in the markers
+	for(var ix = 0; ix < locations.length; ix++)
+	{
+		var pos = locations[ix].location;
+		var title = locations[ix].title;
+		var marker = new google.maps.Marker(
+			{
+				map: map,
+				position: pos,
+				title: title,
+				animation: google.maps.Animation.DROP,
+				id: ix
+			}
 		);
 
-	var marker1 = new 
-	google.maps.Marker
-	(
-		{
-   		position: ShoppingCenter,
-   		map:      map,
-   		title:    'Analia Franco'
-		}
-	);
-
-	var marker2 = new 
-	google.maps.Marker
-	(
-		{
-   		position: hm2,
-   		map:      map,
-   		title:    'hm2'
-		}
-	);
-
-	var infoWindow1 = new google.maps.InfoWindow(
-			{ content: 'Shopping Center' }
-		);
-
-	var infoWindow2 = new google.maps.InfoWindow(
-			{ content: 'Henrique Morize 2' }
-		);
-	
-	marker1.addListener(
-		'click',
-		function()
-		{
-			infoWindow1.open(map,marker1);
-		});
-
-	marker2.addListener(
-		'click',
-		function()
-		{
-			infoWindow2.open(map,marker2);
-		});
+		markers.push(marker);	// one more
+		bounds.extend(marker.position);	// make sure if fits in the map
+		marker.addListener(
+			'click',
+			function()
+			{
+				populateInfoWindow( this, bigInfoWindow);
+			}
+		);	// event added
+	}	 // end for ix
+	// now adjust the zoom level so all locatiosn fit in
+	map.fitBounds(bounds);
 }	// end initMap()
+
+//
+//
+// populateInfoWindow: set the appropriate content for the 
+//	clicked marker
+//
+//
+function populateInfoWindow( marker, infoWindow)
+{
+	if(infoWindow.marker != marker)
+	{
+		infoWindow.marker = marker;
+		infoWindow.setContent('<div>' + marker.title + '</div>');
+		infoWindow.open(map.marker);
+		infoWindow.addListener(
+			'closeclick',
+			function()
+			{
+				infoWindow.setMarker(null);
+			}
+		);
+	}
+}	// end function populateInfoWindow()
