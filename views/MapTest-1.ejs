@@ -6,13 +6,22 @@
 			type="text/css" 
 			href="/stylesheets/MapTest-1.css"
 		>
+		<!--<script-->
+		<!--	async defer-->
+		<!--   	src="https://maps.googleapis.com/maps/api/js?key=<%= KEY_ONE %>&v=3&callback=initMap">-->
+		<!--</script>-->
  	</head>
  	<body>
    		<div class="buttons">
-	   		<input id="show1" type='button' value="Colaboradores">
-	   		<input id='show2' type='button' value="Clientes">
-	   		<input id='show3' type='button' value="Veiculos">
+	   		<input id='Car' 	type='button' value="Veículos">
+	   		<input id='Client'	type='button' value="Clientes">
+	   		<input id='Partner' type='button' value="Colaboradores">
    		</div>
+   		<!--<div id="mobi">-->
+   		<!--	<p>-->
+   		<!--		< %= From_Mobi %>-->
+   		<!--	</p>	-->
+   		<!--</div>-->
 	   	<div id="map">	   		
 	   	</div>
 
@@ -21,19 +30,29 @@
 var map;
 var markers = [];	// to hold the markers
 
+var 	_cats =	[ 	
+		{ id: "Car", 		show: false },
+		{ id: "Client", 	show: false },
+		{ id: "Partner", 	show: false }
+		];	// for managing n categories
+		
+var locations = 
+	[
+	{title: 'Islas', location: 			{ lat: -23.552589, lng: -46.574953 }, cat: 5},
+	{title: 'Sergio', location: 		{ lat: -23.492421, lng: -46.629011 }, cat: 5},
+	{title: 'Mix Leste', location: 		{ lat: -23.541898, lng: -46.547551 }, cat: 2},
+	{title: 'Cotia', location: 			{ lat: -23.605411, lng: -46.932779 }, cat: 5},
+	{title: 'Aguas Claras', location: 	{ lat: -23.421393, lng: -46.621301 }, cat: 3},
+	{title: 'Horto', location: 			{ lat: -23.459292, lng: -46.633217 }, cat: 3},
+	{title: 'Paris', location: 			{ lat: -23.586919, lng: -46.820631 }, cat: 5},
+	{title: 'Carlos', location: 		{ lat: -23.527011, lng: -46.945907 }, cat: 2}
+	];
+
+	var bigInfoWindow = null;
+	
 function initMap()
 {
 
-	var locations = [
-		{title: 'Islas', location: 			{ lat: -23.552589, lng: -46.574953 }},
-		{title: 'Sergio', location: 		{ lat: -23.492421, lng: -46.629011 }},
-		{title: 'Mix Leste', location: 		{ lat: -23.541898, lng: -46.547551 }},
-		{title: 'Cotia', location: 			{ lat: -23.602668, lng: -46.919469 }},
-		{title: 'Aguas Claras', location: 	{ lat: -23.421393, lng: -46.621301 }},
-		{title: 'Horto', location: 			{ lat: -23.459292, lng: -46.633217 }},
-		{title: 'James', location: 			{ lat: -23.551656, lng: -46.619614 }},
-		{title: 'Carlos', location: 		{ lat: -23.527011, lng: -46.945907 }}
-	];
 
 	map = new google.maps.Map(
 		document.getElementById('map'),
@@ -47,24 +66,65 @@ function initMap()
 		}
 	);
 
-	var bigInfoWindow = new google.maps.InfoWindow();
 	var bounds = new google.maps.LatLngBounds();
+
+	bigInfoWindow = new google.maps.InfoWindow();
 
 	// now we loop thru the location arrary and fill in the markers
 	for(var ix = 0; ix < locations.length; ix++)
 	{
 		var pos = locations[ix].location;
 		var title = locations[ix].title;
-		var marker = new google.maps.Marker(
-			{
-				map: map,
-				position: pos,
-				title: title,
-				animation: google.maps.Animation.DROP,
-				id: ix
-			}
-		);
+		var theIcon = "";
+		var pinIcon = null;
+		
+		switch(locations[ix].cat)
+		{
+			case 2:
+				theIcon = "https://maps.google.com/mapfiles/kml/pal4/icon62.png";
+		    	pinIcon = new google.maps.MarkerImage
+		    		(
+				        theIcon,
+				        null,
+				        null,
+				        null,
+				        new google.maps.Size(30, 40)
+				     );
+				var marker = new google.maps.Marker(
+					{
+						map: map,
+						position: pos,
+						title: title,
+						animation: google.maps.Animation.DROP,
+						icon: pinIcon,
+						id: ix
+					});
+				break;
+				
+			case 3:
+				var marker = new google.maps.Marker(
+					{
+						map: map,
+						position: pos,
+						title: title,
+						animation: google.maps.Animation.DROP,
+						label: 'B',
+						id: ix
+					});
+				break;
 
+			default:
+				var marker = new google.maps.Marker(
+					{
+						map: map,
+						position: pos,
+						title: title,
+						animation: google.maps.Animation.DROP,
+						label: 'A',
+						id: ix
+					});
+				break;
+		}
 		markers.push(marker);	// one more
 		bounds.extend(marker.position);	// make sure if fits in the map
 		marker.addListener(
@@ -77,7 +137,141 @@ function initMap()
 	}	 // end for ix
 	// now adjust the zoom level so all locatiosn fit in
 	map.fitBounds(bounds);
-}	// end initMap()
+	for (var cat = 0; cat < _cats.length; cat++)
+	{
+		document.getElementById(_cats[cat].id).addEventListener(
+				"click",
+				showListings
+			);
+	};	// end for
+	// console.log("at the end of initMap()");
+	// console.log("< %= From_Mobi %>");
+	// console.log("at the end of initMap()");
+};	//	end function initMap()
+
+
+
+
+
+function showListings()	
+{
+	//var bounds = new google.maps.LatLngBounds();
+	//
+	//
+	// Veiculos
+	//
+	//
+	if( this.id == "Car")
+	{
+		if ( _cats[0].show )
+		{
+			// show all markers for "Veiculos"
+			for(var i = 0; i< markers.length; i++)
+			{
+				if( locations[i].cat == 2)
+				{
+					markers[i].setMap(map);
+					//bounds.extend(markers[i].position);
+				}
+			}
+			// now corrects zoom
+			//map.fitBounds(bounds);
+		}
+		else
+		{
+			// clears all markers for "Veiculos"
+			for(var i = 0; i< markers.length; i++)
+			{
+				if( locations[i].cat == 2)
+				{
+					markers[i].setMap(null);
+					//bounds.extend(markers[i].position);
+				}
+			}
+			// now corrects zoom
+			//map.fitBounds(bounds);
+		}
+		_cats[0].show = ! _cats[0].show;	// toggle
+		return;
+	}
+	//
+	//
+	// Clientes
+	//
+	//
+	if( this.id == "Client")
+	{
+		if ( _cats[1].show )
+		{
+			// show all markers for "clientes"
+			for(var i = 0; i< markers.length; i++)
+			{
+				if( locations[i].cat == 3)
+				{
+					markers[i].setMap(map);
+					//bounds.extend(markers[i].position);
+				}
+			}
+			// now corrects zoom
+			//map.fitBounds(bounds);
+		}
+		else
+		{
+			// clears all markers for "clientes"
+			for(var i = 0; i< markers.length; i++)
+			{
+				if( locations[i].cat == 3)
+				{
+					markers[i].setMap(null);
+					//bounds.extend(markers[i].position);
+				}
+			}
+			// now corrects zoom
+			//map.fitBounds(bounds);
+		}
+		_cats[1].show = ! _cats[1].show;	// toggle
+		return;
+	}
+	//
+	//
+	// Colaboradores
+	//
+	//
+	if( this.id == "Partner")
+	{
+		if ( _cats[2].show )
+		{
+			// show all markers for "colaboradores"
+			for(var i = 0; i< markers.length; i++)
+			{
+				if( locations[i].cat == 5)
+				{
+					markers[i].setMap(map);
+					//bounds.extend(markers[i].position);
+				}
+			}
+			// now corrects zoom
+			//map.fitBounds(bounds);
+		}
+		else
+		{
+			// clears all markers for "veiculos"
+			for(var i = 0; i< markers.length; i++)
+			{
+				if( locations[i].cat == 5)
+				{
+					markers[i].setMap(null);
+					//bounds.extend(markers[i].position);
+				}
+			}
+			// now corrects zoom
+			//map.fitBounds(bounds);
+		}
+		_cats[2].show = ! _cats[2].show;	// toggle
+		return;
+	}
+	return;
+}	// end function showListings()
 
 //
 //
@@ -85,22 +279,33 @@ function initMap()
 //	clicked marker
 //
 //
-function populateInfoWindow( marker, infoWindow)
-{
-	if(infoWindow.marker != marker)
-	{
-		infoWindow.marker = marker;
-		infoWindow.setContent('<div>' + marker.title + '</div>');
-		infoWindow.open(map.marker);
-		infoWindow.addListener(
-			'closeclick',
-			function()
-			{
-				infoWindow.setMarker(null);
-			}
-		);
-	}
-}	// end function populateInfoWindow()
+      // This function populates the infowindow when the marker is clicked. We'll only allow
+      // one infowindow which will open at the marker that is clicked, and populate based
+      // on that markers position.
+      function populateInfoWindow(marker, infowindow)
+      {
+	        // Check to make sure the infowindow is not already opened on this marker.
+	        if (infowindow.marker != marker)
+	        {
+	          infowindow.marker = marker;
+	          console.log( "marker pos lat: " + marker.position );
+	          infowindow.setContent(
+	          	'<div>' + marker.title +
+	          		'<B> Latitude: ' + marker.position +
+	          		' Longitude: ' + 
+	          	'</div>'
+	          	);
+	          infowindow.open(map, marker);
+	          // Make sure the marker property is cleared if the infowindow is closed.
+	          infowindow.addListener(
+	          	'closeclick', 
+	          	function()
+	          	{
+	            	infowindow.marker = null;
+	          	}
+	          );
+	        }	// end if
+	   }	// end function populateInfoWindow()
 		</script>
 
 		<script
